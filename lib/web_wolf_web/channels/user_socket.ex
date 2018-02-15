@@ -3,6 +3,7 @@ defmodule WebWolfWeb.UserSocket do
 
   ## Channels
   # channel "room:*", WebWolfWeb.RoomChannel
+  channel "call", WebWolf.CallChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
