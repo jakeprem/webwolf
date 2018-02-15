@@ -64,3 +64,6 @@ config :logger, level: :info
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
 # import_config "prod.secret.exs"
+config :web_wolf, WebWolf.Repo,
+  adapter: Sqlite.Ecto2,
+  database: "db.sqlite3"
