@@ -25,9 +25,7 @@ channel.join()
   .receive("ok", () => { console.log("Successfully joined call channel!") })
   .receive("error", () => { console.log("Unable to join.") })
 
-let localStream, peerConnection;
-let localVideo = document.getElementById('localVideo');
-let remoteVideo = document.getElementById('remoteVideo');
+let dataChannel, peerConnection, receieveChannel;
 let connectButton = document.getElementById('connect');
 let callButton = document.getElementById('call');
 let hangupButton = document.getElementById('hangup');
@@ -38,18 +36,10 @@ connectButton.onclick = connect;
 callButton.onclick = call;
 hangupButton.onclick = hangup;
 
-function connect () {
-  console.log('Requesting local stream');
-  navigator.getUserMedia({audio:true, video:true}, gotStream, error => {
-    console.log('getUserMedia error: ', error);
-  });
-}
+var peerChannel;
 
-function gotStream (stream) {
-  console.log('Received local stream');
-  localVideo.src = URL.createObjectURL(stream);
-  localStream = stream;
-  setupPeerConnection();
+function connect () {
+  setupPeerConnection()
 }
 
 function setupPeerConnection () {
@@ -67,11 +57,19 @@ function setupPeerConnection () {
   };
 
   peerConnection = new RTCPeerConnection(servers);
+  Window.peerConnection = peerConnection;
   console.log('Created local peer connection');
   peerConnection.onicecandidate = gotLocalIceCandidate;
-  peerConnection.onaddstream = gotRemoteStream;
-  peerConnection.addStream(localStream);
-  console.log('Added localSTream to localPeerConnection');
+  peerConnection.ondatachannel = gotRemoteChannel;
+  dataChannel = peerConnection.createDataChannel('peerChannel');
+  
+  dataChannel.onerror = e => console.log('DCE:', e);
+  dataChannel.onmessage = e => console.log('DCM:', e.data);
+  dataChannel.onopen = _ => console.log('DCO');
+  dataChannel.onclose = _ => console.log('DCC');
+  Window.peerChannel = dataChannel;
+
+  console.log('Added localChannel to localPeerConnection');
 
 }
 
@@ -96,9 +94,14 @@ function gotRemoteDescription (description) {
   peerConnection.createAnswer(gotLocalDescription, handleError);
 }
 
-function gotRemoteStream (event) {
-  remoteVideo.src = URL.createObjectURL(event.stream);
-  console.log('Received remote stream');
+function gotRemoteChannel (event) {
+  console.log('Received remote channel');
+  receieveChannel = event.channel;
+  Window.receieveChannel = receieveChannel;
+  event.channel.onopen = function() {
+    console.log('Remote channel is open!');
+  }
+  receieveChannel.onmessage = e => console.log(e.data)
 }
 
 function gotLocalIceCandidate (event) {
@@ -114,7 +117,6 @@ function gotRemoteIceCandidate (event) {
   callButton.disabled = true;
   if (event.candidate) {
     peerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
-    console.log('Remote ICE candidate: \n' + event.candidate.candidate);
   }
 }
 
@@ -138,5 +140,6 @@ function hangup() {
 }
 
 function handleError(error) {
-  console.log(error.name + ": " + error.message);
+  // console.log(error.name + ": " + error.message);
+  console.log(error);
 }
