@@ -14,6 +14,7 @@ defmodule WebWolf.Application do
       supervisor(WebWolfWeb.Endpoint, []),
       # Start your own worker by calling: WebWolf.Worker.start_link(arg1, arg2, arg3)
       # worker(WebWolf.Worker, [arg1, arg2, arg3]),
+      supervisor(WebWolfWeb.Presence, []),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -2,8 +2,8 @@ defmodule WebWolfWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", WebWolfWeb.RoomChannel
-  channel "call", WebWolf.CallChannel
+  channel "room:*", WebWolfWeb.RoomChannel
+  channel "call", WebWolfWeb.CallChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket, timeout: 45_000
@@ -20,9 +20,13 @@ defmodule WebWolfWeb.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(_params, socket) do
-    {:ok, socket}
+  def connect(%{"user" => user}, socket) do
+    {:ok, assign(socket, :user, user)}
   end
+
+  # def connect(_params, socket) do
+  #   {:ok, socket}
+  # end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:
   #

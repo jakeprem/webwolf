@@ -1,4 +1,4 @@
-defmodule WebWolf.CallChannel do
+defmodule WebWolfWeb.CallChannel do
   use Phoenix.Channel
 
   def join("call", _auth_msg, socket) do

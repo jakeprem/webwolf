@@ -1,27 +1,69 @@
-// Brunch automatically concatenates all files in your
-// watched paths. Those paths can be configured at
-// config.paths.watched in "brunch-config.js".
-//
-// However, those files will only be executed if
-// explicitly imported. The only exception are files
-// in vendor, which are never wrapped in imports and
-// therefore are always executed.
-
-// Import dependencies
-//
-// If you no longer want to use a dependency, remember
-// to also remove its path from "config.paths.watched".
 import "phoenix_html"
+import {Socket, Presence} from "phoenix"
 
-// Import local files
-//
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
+let user = document.getElementById("User").innerText;
+let socket = new Socket("/socket", {params: {token: window.userToken, user: user}});
+socket.connect();
 
-import socket from "./socket"
+let presences = {};
+let formatTimeStamp = (timestamp) => {
+  let date = new Date(timestamp)
+  return date.toLocaleTimeString();
+}
+let listBy = (user, {metas: metas}) => {
+  return {
+    user: user,
+    onlineAt: formatTimeStamp(metas[0].online_at)
+  }
+}
 
-let channel = socket.channel("call", {})
-channel.join()
+let userList = document.getElementById("UserList");
+let render = (presences) => {
+  userList.innerHTML = Presence.list(presences, listBy)
+    .map(presence => `
+      <li>
+        ${presence.user}
+        <br>
+        <small>online since ${presence.onlineAt}</small>
+      </li>
+    `)
+    .join("");
+}
+let room = socket.channel("room:lobby")
+room.on("presence_state", state => {
+  presences = Presence.syncState(presences, state);
+  render(presences);
+});
+room.join();
+
+let messageInput = document.getElementById("NewMessage")
+messageInput.addEventListener("keypress", (e) => {
+  if (e.keyCode == 13 && messageInput.value != "") {
+    room.push("message:new", messageInput.value);
+    messageInput.value = "";
+  }
+})
+
+let messageList = document.getElementById("MessageList");
+let renderMessage = (message) => {
+  let messageElement = document.createElement("li");
+  messageElement.innerHTML = `
+    <b>${message.user}</b>
+    <i>${formatTimeStamp(message.timestamp)}</i>
+    <p>${message.body}</p>
+  `;
+  messageList.appendChild(messageElement);
+  messageList.scrollTop = messageList.scrollHeight;
+}
+
+room.on("message:new", message => renderMessage(message));
+
+// ##########################################################################
+// ## WEBRTC STUFF BELOW HERE ###############################################
+// ##########################################################################
+
+let callChannel = socket.channel("call", {})
+callChannel.join()
   .receive("ok", () => { console.log("Successfully joined call channel!") })
   .receive("error", () => { console.log("Unable to join.") })
 
@@ -81,7 +123,7 @@ function call () {
 
 function gotLocalDescription (description) {
   peerConnection.setLocalDescription(description, () => {
-    channel.push("message", {body: JSON.stringify({
+    callChannel.push("message", {body: JSON.stringify({
       "sdp": peerConnection.localDescription
     })});
   }, handleError)
@@ -107,7 +149,7 @@ function gotRemoteChannel (event) {
 function gotLocalIceCandidate (event) {
   if (event.candidate) {
     console.log("Local ICE candidate: \n" + event.candidate.candidate);
-    channel.push("message", {body: JSON.stringify({
+    callChannel.push("message", {body: JSON.stringify({
       "candidate": event.candidate
     })});
   }
@@ -120,7 +162,7 @@ function gotRemoteIceCandidate (event) {
   }
 }
 
-channel.on('message', payload => {
+callChannel.on('message', payload => {
   let message = JSON.parse(payload.body);
   if (message.sdp) {
     gotRemoteDescription(message);
