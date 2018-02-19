@@ -1,187 +1,199 @@
 import "phoenix_html"
 import {Socket, Presence} from "phoenix"
 
-let user = document.getElementById("User").innerText;
-let socket = new Socket("/socket", {params: {token: window.userToken, user: user}});
-socket.connect();
+var presences = {}
 
-let presences = {};
-let formatTimeStamp = (timestamp) => {
-  let date = new Date(timestamp)
-  return date.toLocaleTimeString();
-}
-let listBy = (user, {metas: metas}) => {
-  return {
-    user: user,
-    onlineAt: formatTimeStamp(metas[0].online_at)
-  }
-}
+var app = new Vue({
+  el: '#app',
+  data: {
+    message: 'Hello Vue',
+    username: '',
+    socket: null,
+    room: null,
+    presences: {},
+    messages: [],
+    messageInput: ''
+  },
+  computed: {
+    presenceList() {
+      return Presence.list(this.cleanObject(this.presences), this.listBy)
+    }
+  },
+  methods: {
+    joinChat() {
+      this.setupSocket();
+      this.setupChatRoom();
+    },
+    sendMessage() {
+      if (this.messageInput != '') {
+        this.room.push("message:new", this.messageInput)
+        this.messageInput = ''
+      }
+    },
+    setupSocket() {
+      this.socket = new Socket
+      (
+        "/socket", {params: {token: window.userToken, user: this.username}}
+      );
+      this.socket.connect();
+    },
+    setupChatRoom() {
+      let room = this.socket.channel("room:lobby")
+      room.on("presence_state", state => {
+        this.presences = Presence.syncState(this.cleanObject(this.presences), state)
+      })
+      room.on("presence_diff", diff => {
+        this.presences = Presence.syncDiff(this.cleanObject(this.presences), diff)
+      })
+      room.on("message:new", message => {
+        this.messages.push(message)
+      })
+      this.room = room
+      room.join()
+    },
+    formatTimeStamp(timestamp) {
+      let date = new Date(timestamp)
+      return date.toLocaleDateString();
+    },
+    listBy(user, {metas: metas}) {
+      return {
+        user: user,
+        onlineAt: this.formatTimeStamp(metas[0].online_at)
+      }
+    },
+    cleanObject(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+  },
+  created() {
 
-let userList = document.getElementById("UserList");
-let render = (presences) => {
-  userList.innerHTML = Presence.list(presences, listBy)
-    .map(presence => `
-      <li>
-        ${presence.user}
-        <br>
-        <small>online since ${presence.onlineAt}</small>
-      </li>
-    `)
-    .join("");
-}
-let room = socket.channel("room:lobby")
-room.on("presence_state", state => {
-  presences = Presence.syncState(presences, state);
-  render(presences);
-});
-room.join();
-
-let messageInput = document.getElementById("NewMessage")
-messageInput.addEventListener("keypress", (e) => {
-  if (e.keyCode == 13 && messageInput.value != "") {
-    room.push("message:new", messageInput.value);
-    messageInput.value = "";
   }
 })
-
-let messageList = document.getElementById("MessageList");
-let renderMessage = (message) => {
-  let messageElement = document.createElement("li");
-  messageElement.innerHTML = `
-    <b>${message.user}</b>
-    <i>${formatTimeStamp(message.timestamp)}</i>
-    <p>${message.body}</p>
-  `;
-  messageList.appendChild(messageElement);
-  messageList.scrollTop = messageList.scrollHeight;
-}
-
-room.on("message:new", message => renderMessage(message));
 
 // ##########################################################################
 // ## WEBRTC STUFF BELOW HERE ###############################################
 // ##########################################################################
 
-let callChannel = socket.channel("call", {})
-callChannel.join()
-  .receive("ok", () => { console.log("Successfully joined call channel!") })
-  .receive("error", () => { console.log("Unable to join.") })
+// let callChannel = socket.channel("call", {})
+// callChannel.join()
+//   .receive("ok", () => { console.log("Successfully joined call channel!") })
+//   .receive("error", () => { console.log("Unable to join.") })
 
-let dataChannel, peerConnection, receieveChannel;
-let connectButton = document.getElementById('connect');
-let callButton = document.getElementById('call');
-let hangupButton = document.getElementById('hangup');
+// let dataChannel, peerConnection, receieveChannel;
+// let connectButton = document.getElementById('connect');
+// let callButton = document.getElementById('call');
+// let hangupButton = document.getElementById('hangup');
 
-hangupButton.disabled = true;
-callButton.disabled = true;
-connectButton.onclick = connect;
-callButton.onclick = call;
-hangupButton.onclick = hangup;
+// hangupButton.disabled = true;
+// callButton.disabled = true;
+// connectButton.onclick = connect;
+// callButton.onclick = call;
+// hangupButton.onclick = hangup;
 
-var peerChannel;
+// var peerChannel;
 
-function connect () {
-  setupPeerConnection()
-}
+// function connect () {
+//   setupPeerConnection()
+// }
 
-function setupPeerConnection () {
-  connectButton.disabled = true;
-  callButton.disabled = false;
-  hangupButton.disabled = false;
-  console.log('Waiting for call');
+// function setupPeerConnection () {
+//   connectButton.disabled = true;
+//   callButton.disabled = false;
+//   hangupButton.disabled = false;
+//   console.log('Waiting for call');
 
-  let servers = {
-    "iceServers": [
-      {
-        "url": "stun:stun.example.org"
-      }
-    ]
-  };
+//   let servers = {
+//     "iceServers": [
+//       {
+//         "url": "stun:stun.example.org"
+//       }
+//     ]
+//   };
 
-  peerConnection = new RTCPeerConnection(servers);
-  Window.peerConnection = peerConnection;
-  console.log('Created local peer connection');
-  peerConnection.onicecandidate = gotLocalIceCandidate;
-  peerConnection.ondatachannel = gotRemoteChannel;
-  dataChannel = peerConnection.createDataChannel('peerChannel');
+//   peerConnection = new RTCPeerConnection(servers);
+//   Window.peerConnection = peerConnection;
+//   console.log('Created local peer connection');
+//   peerConnection.onicecandidate = gotLocalIceCandidate;
+//   peerConnection.ondatachannel = gotRemoteChannel;
+//   dataChannel = peerConnection.createDataChannel('peerChannel');
   
-  dataChannel.onerror = e => console.log('DCE:', e);
-  dataChannel.onmessage = e => console.log('DCM:', e.data);
-  dataChannel.onopen = _ => console.log('DCO');
-  dataChannel.onclose = _ => console.log('DCC');
-  Window.peerChannel = dataChannel;
+//   dataChannel.onerror = e => console.log('DCE:', e);
+//   dataChannel.onmessage = e => console.log('DCM:', e.data);
+//   dataChannel.onopen = _ => console.log('DCO');
+//   dataChannel.onclose = _ => console.log('DCC');
+//   Window.peerChannel = dataChannel;
 
-  console.log('Added localChannel to localPeerConnection');
+//   console.log('Added localChannel to localPeerConnection');
 
-}
+// }
 
-function call () {
-  callButton.disabled = true;
-  console.log('Starting call');
-  peerConnection.createOffer(gotLocalDescription, handleError);
-}
+// function call () {
+//   callButton.disabled = true;
+//   console.log('Starting call');
+//   peerConnection.createOffer(gotLocalDescription, handleError);
+// }
 
-function gotLocalDescription (description) {
-  peerConnection.setLocalDescription(description, () => {
-    callChannel.push("message", {body: JSON.stringify({
-      "sdp": peerConnection.localDescription
-    })});
-  }, handleError)
-  console.log('Offer from localPeerConnection: \n' + description.sdp);
-}
+// function gotLocalDescription (description) {
+//   peerConnection.setLocalDescription(description, () => {
+//     callChannel.push("message", {body: JSON.stringify({
+//       "sdp": peerConnection.localDescription
+//     })});
+//   }, handleError)
+//   console.log('Offer from localPeerConnection: \n' + description.sdp);
+// }
 
-function gotRemoteDescription (description) {
-  console.log('Answer from remotePeerConnection: \n' + description.sdp);
-  peerConnection.setRemoteDescription(new RTCSessionDescription(description.sdp));
-  peerConnection.createAnswer(gotLocalDescription, handleError);
-}
+// function gotRemoteDescription (description) {
+//   console.log('Answer from remotePeerConnection: \n' + description.sdp);
+//   peerConnection.setRemoteDescription(new RTCSessionDescription(description.sdp));
+//   peerConnection.createAnswer(gotLocalDescription, handleError);
+// }
 
-function gotRemoteChannel (event) {
-  console.log('Received remote channel');
-  receieveChannel = event.channel;
-  Window.receieveChannel = receieveChannel;
-  event.channel.onopen = function() {
-    console.log('Remote channel is open!');
-  }
-  receieveChannel.onmessage = e => console.log(e.data)
-}
+// function gotRemoteChannel (event) {
+//   console.log('Received remote channel');
+//   receieveChannel = event.channel;
+//   Window.receieveChannel = receieveChannel;
+//   event.channel.onopen = function() {
+//     console.log('Remote channel is open!');
+//   }
+//   receieveChannel.onmessage = e => console.log(e.data)
+// }
 
-function gotLocalIceCandidate (event) {
-  if (event.candidate) {
-    console.log("Local ICE candidate: \n" + event.candidate.candidate);
-    callChannel.push("message", {body: JSON.stringify({
-      "candidate": event.candidate
-    })});
-  }
-}
+// function gotLocalIceCandidate (event) {
+//   if (event.candidate) {
+//     console.log("Local ICE candidate: \n" + event.candidate.candidate);
+//     callChannel.push("message", {body: JSON.stringify({
+//       "candidate": event.candidate
+//     })});
+//   }
+// }
 
-function gotRemoteIceCandidate (event) {
-  callButton.disabled = true;
-  if (event.candidate) {
-    peerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
-  }
-}
+// function gotRemoteIceCandidate (event) {
+//   callButton.disabled = true;
+//   if (event.candidate) {
+//     peerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+//   }
+// }
 
-callChannel.on('message', payload => {
-  let message = JSON.parse(payload.body);
-  if (message.sdp) {
-    gotRemoteDescription(message);
-  } else {
-    gotRemoteIceCandidate(message);
-  }
-});
+// callChannel.on('message', payload => {
+//   let message = JSON.parse(payload.body);
+//   if (message.sdp) {
+//     gotRemoteDescription(message);
+//   } else {
+//     gotRemoteIceCandidate(message);
+//   }
+// });
 
-function hangup() {
-  console.log('Ending call');
-  peerConnection.close();
-  localVideo.src = null;
-  peerConnection = null;
-  hangupButton.disabled = true;
-  connectButton.disabled = false;
-  callButton.disabled = true;
-}
+// function hangup() {
+//   console.log('Ending call');
+//   peerConnection.close();
+//   localVideo.src = null;
+//   peerConnection = null;
+//   hangupButton.disabled = true;
+//   connectButton.disabled = false;
+//   callButton.disabled = true;
+// }
 
-function handleError(error) {
-  // console.log(error.name + ": " + error.message);
-  console.log(error);
-}
+// function handleError(error) {
+//   // console.log(error.name + ": " + error.message);
+//   console.log(error);
+// }
