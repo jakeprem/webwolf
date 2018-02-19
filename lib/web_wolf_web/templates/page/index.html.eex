@@ -1,5 +1,5 @@
 <div id="app">
-  <div class="row">
+  <div class="row" v-if="!(socket && socket.isConnected)">
     <div class="col-md-8">
       <input type="text" placeholder="Username" class="form-control" v-model="username">
     </div>
@@ -8,9 +8,7 @@
     </div>
   </div>
   
-  
-  <hr>
-  <div class="row">
+  <div class="row" v-else>
     <div class="col-md-12 alert-alert-info">
       Hello, <span id="User">{{username}}</span>
     </div>

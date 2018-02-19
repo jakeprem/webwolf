@@ -33,7 +33,7 @@ var app = new Vue({
     setupSocket() {
       this.socket = new Socket
       (
-        "/socket", {params: {token: window.userToken, user: this.username}}
+        "/socket", {params: {user: this.username}}
       );
       this.socket.connect();
     },
