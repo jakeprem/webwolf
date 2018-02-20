@@ -6,7 +6,6 @@ var presences = {}
 Window.vueApp = new Vue({
   el: '#app',
   data: {
-    message: 'Hello Vue',
     username: '',
     socket: null,
     room: null,
@@ -14,11 +13,9 @@ Window.vueApp = new Vue({
     messages: [],
     messageInput: '',
 
-    callChannel: null,
     listenChannel: null,
     peerConnection: null,
     sendDataChannel: null,
-    receieveDataChannel: null,
     callingUser: '',
 
     rtcMessageInput: '',
