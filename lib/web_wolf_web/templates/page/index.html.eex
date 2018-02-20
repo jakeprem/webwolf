@@ -27,29 +27,23 @@
       <h2>Who's Online?</h2>
       <ul id="UserList" class="list-unstyled">
         <li v-for="presence in presenceList">
-          {{presence.user}}
-          <br>
-          <small>online since {{presence.onlineAt}}</small>
+          <div class="row">
+            <div class="col-md-8">
+              {{presence.user}}
+              <br>
+              <small>online since {{presence.onlineAt}}</small>
+            </div>
+            <div class="col-md-4">
+              <button @click="callUser(presence.user)">Call</button>
+            </div>
+          </div>
+          
         </li>
       </ul>
     </div>
   </div>
 </div>
 
-<%# <div class="row">
-  <div class="col-md-8">
-    <h2>Messages</h2>
-    <input type="text" id="NewMessage" placeholder="Type and press enter..." class="form-control">
-    <ul id="MessageList" class="list-unstyled"></ul>
-  </div>
-  <div class="col-md-4">
-    <h2>Who's Online?</h2>
-    <ul id="UserList" class="list-unstyled">
-      <li>Loading online users...</li>
-    </ul>
-  </div>
-</div>
-<hr> %>
 <h2>WebRTC Stuff</h2>
 <div>
   <button id="connect">Connect</button>

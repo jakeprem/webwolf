@@ -12,7 +12,13 @@ var app = new Vue({
     room: null,
     presences: {},
     messages: [],
-    messageInput: ''
+    messageInput: '',
+
+    callChannel: null,
+    listenChannel: null,
+    peerConnection: null,
+    sendDataChannel: null,
+    receieveDataChannel: null
   },
   computed: {
     presenceList() {
@@ -23,6 +29,9 @@ var app = new Vue({
     joinChat() {
       this.setupSocket();
       this.setupChatRoom();
+
+      this.setupPeerConnection();
+      this.setupListeningChannels();
     },
     sendMessage() {
       if (this.messageInput != '') {
@@ -63,10 +72,91 @@ var app = new Vue({
     },
     cleanObject(obj) {
       return JSON.parse(JSON.stringify(obj));
+    },
+
+
+    callUser(callUsername) {
+      this.setupCallingChannels();
+      this.initiateCall();
+    },
+    setupListeningChannels(callUsername) {
+      this.listenChannel = this.socket.channel("call:" + this.username)
+      this.listenChannel.join()
+        .receive("ok", () => { console.log("Successfully joined listen channel!") })
+        .receive("error", () => { console.log("Unable to join.") })
+
+      this.listenChannel.on('message', payload => {
+        let message = JSON.parse(payload.body);
+        if (message.sdp) {
+          this.gotRemoteDescription(message);
+        } else {
+          this.gotRemoteIceCandidate(message);
+        }
+      });
+    },
+    setupCallingChannels(callUsername) {
+      this.callChannel = this.socket.channel("call:" + callUsername, {})
+      this.callChannel.join()
+        .receive("ok", () => { console.log("Successfully joined call channel!") })
+        .receive("error", () => { console.log("Unable to join.") })
+    },
+    setupPeerConnection() {
+      let servers = {
+        "iceServers": [
+          { "url": "stun:stun.example.org" }
+        ]
+      };
+
+      this.peerConnection = new RTCPeerConnection(servers);
+      this.peerConnection.onicecandidate = this.gotLocalIceCandidate
+      this.peerConnection.ondatachannel = this.gotRemoteChannel
+      this.sendDataChannel = this.peerConnection.createDataChannel('sendDataChannel')
+
+      this.sendDataChannel.onerror = e => console.log('DCE:', e);
+      this.sendDataChannel.onmessage = e => console.log('DCM:', e.data);
+      this.sendDataChannel.onopen = _ => console.log('DCO');
+      this.sendDataChannel.onclose = _ => console.log('DCC');
+    },
+    initiateCall() {
+      this.peerConnection.createOffer(this.gotLocalDescription, this.handleError)
+    },
+
+
+
+    gotLocalDescription(description) {
+      this.peerConnection.setLocalDescription(description, () => {
+        this.callChannel.push("message", {body: JSON.stringify({
+          "sdp": this.peerConnection.gotLocalDescription
+        })});
+      }, this.handleError)
+    },
+    gotRemoteDescription(description) {
+      this.peerConnection.setRemoteDescription(new RTCSessionDescription(description.sdp))
+      this.peerConnection.createAnswer(this.gotLocalDescription, this.handleError)
+    },
+    gotRemoteChannel(event) {
+      this.receieveDataChannel = event.channel
+      event.channel.onopen = _ => console.log('Remote channel is open')
+      receieveDataChannel.onmessage = e => console.log(e.data)
+    },
+    gotLocalIceCandidate (event) {
+      if (event.candidate) {
+        console.log("Local ICE candidate: \n" + event.candidate.candidate);
+        this.callChannel.push("message", {body: JSON.stringify({
+          "candidate": event.candidate
+        })});
+      }
+    },
+    gotRemoteIceCandidate (event) {
+      if (event.candidate) {
+        this.peerConnection.addIceCandidate(new RTCIceCandidate(event.candidate));
+      }
+    },
+    handleError(error) {
+      console.log(error)
     }
   },
   created() {
-
   }
 })
 
@@ -116,7 +206,7 @@ var app = new Vue({
 //   peerConnection.onicecandidate = gotLocalIceCandidate;
 //   peerConnection.ondatachannel = gotRemoteChannel;
 //   dataChannel = peerConnection.createDataChannel('peerChannel');
-  
+
 //   dataChannel.onerror = e => console.log('DCE:', e);
 //   dataChannel.onmessage = e => console.log('DCM:', e.data);
 //   dataChannel.onopen = _ => console.log('DCO');
