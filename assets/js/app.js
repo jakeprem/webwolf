@@ -19,7 +19,10 @@ Window.vueApp = new Vue({
     peerConnection: null,
     sendDataChannel: null,
     receieveDataChannel: null,
-    callingUser: ''
+    callingUser: '',
+
+    rtcMessageInput: '',
+    rtcMessages: []
   },
   computed: {
     presenceList() {
@@ -99,12 +102,6 @@ Window.vueApp = new Vue({
         }
       });
     },
-    // setupCallingChannels(callUsername) {
-    //   this.callChannel = this.socket.channel("call:" + callUsername, {})
-    //   this.callChannel.join()
-    //     .receive("ok", () => { console.log("Successfully joined call channel!") })
-    //     .receive("error", () => { console.log("Unable to join.") })
-    // },
     setupPeerConnection() {
       let servers = {
         "iceServers": [
@@ -120,7 +117,10 @@ Window.vueApp = new Vue({
       this.sendDataChannel = this.peerConnection.createDataChannel('sendDataChannel')
 
       this.sendDataChannel.onerror = e => console.log('DCE:', e);
-      this.sendDataChannel.onmessage = e => console.log('DCM:', e.data);
+      this.sendDataChannel.onmessage = e => {
+        console.log(JSON.parse(e.data));
+        this.rtcMessages.push(JSON.parse(e.data))
+      }
       this.sendDataChannel.onopen = _ => console.log('DCO');
       this.sendDataChannel.onclose = _ => console.log('DCC');
     },
@@ -143,9 +143,12 @@ Window.vueApp = new Vue({
       this.peerConnection.createAnswer(this.gotLocalDescription, this.handleError)
     },
     gotRemoteChannel(event) {
-      this.receieveDataChannel = event.channel
+      this.sendDataChannel = event.channel
       event.channel.onopen = _ => console.log('Remote channel is open')
-      this.receieveDataChannel.onmessage = e => console.log(e.data)
+      this.sendDataChannel.onmessage = e => {
+        console.log(JSON.parse(e.data))
+        this.rtcMessages.push(JSON.parse(e.data))
+      }
     },
     gotLocalIceCandidate (event) {
       if (event.candidate) {
@@ -162,6 +165,13 @@ Window.vueApp = new Vue({
     },
     handleError(error) {
       console.log(error)
+    },
+
+    sendRTCMessage() {
+      let msgObj = {sender: this.username, message: this.rtcMessageInput}
+      this.sendDataChannel.send(JSON.stringify(msgObj))
+      this.rtcMessages.push(msgObj)
+      this.rtcMessageInput = ''
     }
   },
   created() {

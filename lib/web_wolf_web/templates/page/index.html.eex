@@ -42,11 +42,32 @@
       </ul>
     </div>
   </div>
+
+  <hr>
+  <h2>WebRTC Messages</h2>
+  <div class="row">
+    
+
+    <div class="col-md-12">
+      <h2>Messages</h2>
+      <input type="text" v-model="rtcMessageInput" v-on:keyup.13="sendRTCMessage" placeholder="Type and press enter..." class="form-control">
+      <ul id="MessageList" class="list-unstyled">
+        <li v-for="message in rtcMessages">
+          <b>{{message.sender}}</b>
+          <%# <i>{{formatTimeStamp(message.timestamp)}}</i> %>
+          <p>{{message.message}}</p>
+        </li>
+      </ul>
+    </div>
+    <div class="col-md-12">
+      <div v-if="peerConnection">
+        <h2>WebRTC Connection Info</h2>
+        <pre>{{peerConnection.remoteDescription.sdp}}</pre>
+      </div>
+      <code>chrome://webrtc-internals/</code>
+    </div>
+  </div>
 </div>
 
-<h2>WebRTC Stuff</h2>
-<div>
-  <button id="connect">Connect</button>
-  <button id="call">Call</button>
-  <button id="hangup">Hangup</button>
-</div>
+
+
