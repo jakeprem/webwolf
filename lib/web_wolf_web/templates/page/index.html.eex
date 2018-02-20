@@ -1,10 +1,10 @@
 <div id="app">
   <div class="row" v-if="!(socket && socket.isConnected)">
     <div class="col-md-8">
-      <input type="text" placeholder="Username" class="form-control" v-model="username">
+      <input type="text" placeholder="Username" v-on:keyup.13="joinChat" class="form-control" v-model="username">
     </div>
     <div class="col-md-4">
-      <button v-on:click="joinChat">Start chat</button>
+      <button v-on:click="joinChat" >Start chat</button>
     </div>
   </div>
   

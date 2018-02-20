@@ -7,11 +7,22 @@ defmodule WebWolfWeb.RoomChannel do
     {:ok, socket}
   end
 
+  def join("room:" <> topic, _params, socket) do
+    IO.puts(topic)
+    send self(), :after_join
+    {:ok, socket}
+  end
+
   def handle_info(:after_join, socket) do
     Presence.track(socket, socket.assigns.user, %{
       online_at: :os.system_time(:milli_seconds)
     })
     push socket, "presence_state", Presence.list(socket)
+    {:noreply, socket}
+  end
+
+  def handle_in("whisper:" <> username, message, socket) do
+      WebWolfWeb.Endpoint.broadcast("room:" <> username, "whispered", message)
     {:noreply, socket}
   end
 
@@ -23,4 +34,6 @@ defmodule WebWolfWeb.RoomChannel do
     }
     {:noreply, socket}
   end
+
+  
 end

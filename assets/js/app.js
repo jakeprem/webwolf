@@ -12,7 +12,9 @@ var app = new Vue({
     room: null,
     presences: {},
     messages: [],
-    messageInput: ''
+    messageInput: '',
+
+    testChan: null
   },
   computed: {
     presenceList() {
@@ -27,6 +29,7 @@ var app = new Vue({
     sendMessage() {
       if (this.messageInput != '') {
         this.room.push("message:new", this.messageInput)
+        this.room.push("whisper:" + 'Jake', {from: this.username, body: "A surprise to be sure, but a welcome one"})
         this.messageInput = ''
       }
     },
@@ -36,6 +39,11 @@ var app = new Vue({
         "/socket", {params: {user: this.username}}
       );
       this.socket.connect();
+      
+      this.testChan = this.socket.channel("room:" + this.username)
+      this.testChan.join()
+      this.testChan.on("whispered", message => console.log(message));
+
     },
     setupChatRoom() {
       let room = this.socket.channel("room:lobby")
