@@ -3,7 +3,7 @@ import {Socket, Presence} from "phoenix"
 
 var presences = {}
 
-var app = new Vue({
+Window.vueApp = new Vue({
   el: '#app',
   data: {
     message: 'Hello Vue',
@@ -18,7 +18,8 @@ var app = new Vue({
     listenChannel: null,
     peerConnection: null,
     sendDataChannel: null,
-    receieveDataChannel: null
+    receieveDataChannel: null,
+    callingUser: ''
   },
   computed: {
     presenceList() {
@@ -76,8 +77,11 @@ var app = new Vue({
 
 
     callUser(callUsername) {
-      this.setupCallingChannels();
+      // this.setupCallingChannel();
+      this.setupDataChannel();
       this.initiateCall();
+
+      this.callingUser = callUsername
     },
     setupListeningChannels(callUsername) {
       this.listenChannel = this.socket.channel("call:" + this.username)
@@ -85,21 +89,22 @@ var app = new Vue({
         .receive("ok", () => { console.log("Successfully joined listen channel!") })
         .receive("error", () => { console.log("Unable to join.") })
 
-      this.listenChannel.on('message', payload => {
+      this.listenChannel.on('call_incoming', payload => {
         let message = JSON.parse(payload.body);
         if (message.sdp) {
           this.gotRemoteDescription(message);
+          this.callingUser = payload.user
         } else {
           this.gotRemoteIceCandidate(message);
         }
       });
     },
-    setupCallingChannels(callUsername) {
-      this.callChannel = this.socket.channel("call:" + callUsername, {})
-      this.callChannel.join()
-        .receive("ok", () => { console.log("Successfully joined call channel!") })
-        .receive("error", () => { console.log("Unable to join.") })
-    },
+    // setupCallingChannels(callUsername) {
+    //   this.callChannel = this.socket.channel("call:" + callUsername, {})
+    //   this.callChannel.join()
+    //     .receive("ok", () => { console.log("Successfully joined call channel!") })
+    //     .receive("error", () => { console.log("Unable to join.") })
+    // },
     setupPeerConnection() {
       let servers = {
         "iceServers": [
@@ -110,6 +115,8 @@ var app = new Vue({
       this.peerConnection = new RTCPeerConnection(servers);
       this.peerConnection.onicecandidate = this.gotLocalIceCandidate
       this.peerConnection.ondatachannel = this.gotRemoteChannel
+    },
+    setupDataChannel() {
       this.sendDataChannel = this.peerConnection.createDataChannel('sendDataChannel')
 
       this.sendDataChannel.onerror = e => console.log('DCE:', e);
@@ -125,9 +132,10 @@ var app = new Vue({
 
     gotLocalDescription(description) {
       this.peerConnection.setLocalDescription(description, () => {
-        this.callChannel.push("message", {body: JSON.stringify({
-          "sdp": this.peerConnection.gotLocalDescription
-        })});
+        this.listenChannel.push("call:" + this.callingUser, {
+          body: JSON.stringify({"sdp": this.peerConnection.localDescription}),
+          user: this.username
+        });
       }, this.handleError)
     },
     gotRemoteDescription(description) {
@@ -137,12 +145,12 @@ var app = new Vue({
     gotRemoteChannel(event) {
       this.receieveDataChannel = event.channel
       event.channel.onopen = _ => console.log('Remote channel is open')
-      receieveDataChannel.onmessage = e => console.log(e.data)
+      this.receieveDataChannel.onmessage = e => console.log(e.data)
     },
     gotLocalIceCandidate (event) {
       if (event.candidate) {
         console.log("Local ICE candidate: \n" + event.candidate.candidate);
-        this.callChannel.push("message", {body: JSON.stringify({
+        this.listenChannel.push("call:" + this.callingUser, {body: JSON.stringify({
           "candidate": event.candidate
         })});
       }
