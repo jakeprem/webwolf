@@ -9,8 +9,8 @@
   <body>
     <div id="serverApp">
       <ul>
-        <li v-for="(value, key) in connections">
-          {{ key }} : {{ value.lastMessage }}
+        <li v-for="(value, key) in clientMessages">
+          {{ key }} : {{ value }}
         </li>
       </ul>
     </div>
