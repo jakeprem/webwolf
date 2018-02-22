@@ -10,7 +10,7 @@
     <div id="serverApp">
       <ul>
         <li v-for="(value, key) in clientMessages">
-          {{ key }} : {{ value }}
+          {{ value.username }} : {{ value.message }}
         </li>
       </ul>
     </div>

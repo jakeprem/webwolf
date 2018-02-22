@@ -35,7 +35,7 @@ var iceServers = {
 };
 
 var clientId = uuidv4()
-var username = 'Not set yet!'
+var username = prompt('What is your username?', namer())
 var phxSocket = new Phoenix.Socket("/socket", {params: {user: clientId}})
 phxSocket.connect()
 
@@ -65,7 +65,10 @@ dataChannel.onmessage = e => console.log(e)
 dataChannel.onopen = _ => {
   console.log('Data channel open')
   setInterval(_ => {
-    dataChannel.send(getJoystickDirection(joystick))
+    dataChannel.send(JSON.stringify({
+      message: getJoystickDirection(joystick),
+      username
+    }))
   }, 250)
 }
 dataChannel.onclose = _ => console.log('Data channel closed')

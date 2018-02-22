@@ -61,8 +61,8 @@ var vueApp = new Vue({
         }
       }
     },
-    setClientMessage(clientId, message) {
-      Vue.set(this.clientMessages, clientId, message)
+    setClientMessage(clientId, data) {
+      Vue.set(this.clientMessages, clientId, JSON.parse(data))
     }
   },
   created() {

@@ -39,13 +39,6 @@
 	<body>
 		<div id="container"></div>
 		<div id="info">
-			<a href="http://learningthreejs.com/blog/2011/12/26/let-s-make-a-3d-game-virtual-joystick/" target="_blank">VirtualJoystick.js</a>
-			A library javascript to provide a virtual joystick on touchscreen.
-			-
-			inspired by this
-			<a href="http://sebleedelisle.com/2011/04/multi-touch-game-controller-in-javascripthtml5-for-ipad/">post</a>
-			from
-			<a href="http://sebleedelisle.com/">seb.ly</a>
 			<br/>
 			Touch the screen and move
 			-
@@ -54,6 +47,7 @@
 			<span id="result"></span>
 		</div>
 		<script src="<%= static_path(@conn, "/js/phoenix.js") %>"></script>
+		<script src="<%= static_path(@conn, "/js/namer.js") %>"></script>
 		<script src="<%= static_path(@conn, "/js/virtualjoystick.js") %>"></script>
     <script src="<%= static_path(@conn, "/js/client.js") %>"></script>
 		
