@@ -102,7 +102,7 @@ Window.vueApp = new Vue({
     setupPeerConnection() {
       let servers = {
         "iceServers": [
-          { "url": "stun:stun.example.org" }
+          { "url": "stun.l.google.com:19302" }
         ]
       };
 
