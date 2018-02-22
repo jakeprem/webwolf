@@ -62,7 +62,10 @@ var vueApp = new Vue({
       }
     },
     setClientMessage(clientId, data) {
-      Vue.set(this.clientMessages, clientId, JSON.parse(data))
+      data = JSON.parse(data)
+      if (data.message != 'neutral') {
+        Vue.set(this.clientMessages, clientId, data)
+      }
     }
   },
   created() {
@@ -96,59 +99,40 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: p
 
 function preload() {
 
-    game.load.image('phaser', 'images/phoenix.png');
+    game.load.image('phaser', 'images/ball.png');
 
 }
 
 var sprite;
 
-var upKey;
-var downKey;
-var leftKey;
-var rightKey;
 
 function create() {
 
     game.stage.backgroundColor = '#000000';
 
-    sprite = game.add.sprite(300, 300, 'phaser');
+    sprite = game.add.sprite(350, 250, 'phaser');
+    sprite.scale.setTo(0.1, 0.1)
 
 }
 
 function update() {
 
     Object.keys(vueApp.clientMessages).forEach(
-      ([key, value]) => {
-        if (value == 'up') {
+      (x) => {
+        let value = vueApp.clientMessages[x].message;
+        console.log('X:'+sprite.x + ' Y:'+sprite.y)
+        if (value == 'up' && sprite.y >= 0) {
           sprite.y--
         }
-        else if (value == 'down') {
+        else if (value == 'down' && sprite.y <= 600) {
           sprite.y++
         }
-        else if (value == 'left') {
+        else if (value == 'left' && sprite.x >= 0) {
           sprite.x--
         }
-        else if (value == 'right') {
+        else if (value == 'right' && sprite.x <= 800) {
           sprite.x++
         }
       }
     )
-    // if (upKey.isDown)
-    // {
-    //     sprite.y--;
-    // }
-    // else if (downKey.isDown)
-    // {
-    //     sprite.y++;
-    // }
-
-    // if (leftKey.isDown)
-    // {
-    //     sprite.x--;
-    // }
-    // else if (rightKey.isDown)
-    // {
-    //     sprite.x++;
-    // }
-
 }
