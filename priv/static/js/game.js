@@ -111,12 +111,13 @@ var sprite;
 
 function create() {
 
-    var graphics = game.add.graphics(0, 0);
+    var graphics = game.add.graphics(100, 100);
 
     // graphics.lineStyle(2, 0xffd900, 1);
 
     graphics.beginFill(0xFF0000, 1);
-    graphics.drawCircle(300, 300, 100);
+    graphics.drawCircle(0, 0, 100);
+    graphics.endFill();
     
     game.stage.backgroundColor = '#000000';
 
