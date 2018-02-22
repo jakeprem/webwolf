@@ -19,6 +19,7 @@ defmodule WebWolfWeb.Router do
     get "/", PageController, :index
     get "/client", PageController, :client
     get "/server", PageController, :server
+    get "/game", PageController, :game
   end
 
   # Other scopes may use custom stacks.

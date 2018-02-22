@@ -14,4 +14,9 @@ defmodule WebWolfWeb.PageController do
     conn = put_layout conn, false
     render conn, "server.html"
   end
+
+  def game(conn, _params) do
+    conn = put_layout conn, false
+    render conn, "game.html"
+  end
 end

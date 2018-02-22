@@ -15,7 +15,8 @@
       </ul>
     </div>
     <script src="<%= static_path(@conn, "/js/vue.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/phaser.js") %>"></script>
     <script src="<%= static_path(@conn, "/js/phoenix.js") %>"></script>
-    <script src="<%= static_path(@conn, "/js/server.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/game.js") %>"></script>
   </body>
 </html>
