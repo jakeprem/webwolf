@@ -36,6 +36,8 @@ var iceServers = {
 
 var clientId = uuidv4()
 var username = prompt('What is your username?', namer())
+document.getElementById('username').innerHTML = username
+
 var phxSocket = new Phoenix.Socket("/socket", {params: {user: clientId}})
 phxSocket.connect()
 

@@ -39,7 +39,7 @@
 	<body>
 		<div id="container"></div>
 		<div id="info">
-			<br/>
+			<h2 id="username"></h2>
 			Touch the screen and move
 			-
 			works with mouse too as debug

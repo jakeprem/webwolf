@@ -65,6 +65,10 @@
         <pre>{{peerConnection.remoteDescription.sdp}}</pre>
       </div>
       <code>chrome://webrtc-internals/</code>
+      <br>
+      <div class="giant-links">
+        <%= link "GO TO CLIENT PAGE", to: page_path(@conn, :client) %>
+      </div>
     </div>
   </div>
 </div>
