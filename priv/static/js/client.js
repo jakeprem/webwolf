@@ -66,7 +66,7 @@ dataChannel.onopen = _ => {
   console.log('Data channel open')
   setInterval(_ => {
     dataChannel.send(getJoystickDirection(joystick))
-  }, 1000)
+  }, 250)
 }
 dataChannel.onclose = _ => console.log('Data channel closed')
 
