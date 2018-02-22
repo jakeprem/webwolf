@@ -133,10 +133,10 @@ function update() {
       (x) => {
         let value = vueApp.clientMessages[x].message;
         console.log('X:'+sprite.x + ' Y:'+sprite.y)
-        if (value == 'up' && sprite.y >= -300) {
+        if (value == 'up' && sprite.y >= 0) {
           sprite.y--
         }
-        else if (value == 'down' && sprite.y <= 300) {
+        else if (value == 'down' && sprite.y <= 600) {
           sprite.y++
         }
         else if (value == 'left' && sprite.x >= 0) {
