@@ -98,8 +98,11 @@ var vueApp = new Vue({
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update });
 
 function preload() {
-
-    game.load.image('phaser', 'images/ball.png');
+    let baseURL = 'http://www.pngmart.com/files/3/'
+    let imageName = "Sports-Ball-PNG-Clipart-279x279.png"
+    game.load.baseURL = baseURL
+    game.load.crossOrigin = 'anonymous';
+    game.load.image('phaser', imageName);
 
 }
 
@@ -108,10 +111,18 @@ var sprite;
 
 function create() {
 
+    var graphics = game.add.graphics(0, 0);
+
+    // graphics.lineStyle(2, 0xffd900, 1);
+
+    graphics.beginFill(0xFF0000, 1);
+    graphics.drawCircle(300, 300, 100);
+    
     game.stage.backgroundColor = '#000000';
 
-    sprite = game.add.sprite(350, 250, 'phaser');
-    sprite.scale.setTo(0.1, 0.1)
+    // sprite = game.add.sprite(350, 250, 'phaser');
+    // sprite.scale.setTo(0.1, 0.1)
+    sprite = graphics
 
 }
 
