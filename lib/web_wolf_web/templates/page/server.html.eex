@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Lightning Talk Client</title>
+  </head>
+  <body>
+    <div id="serverApp">
+      <ul>
+        <li v-for="(value, key) in connections">
+          {{ key }} : {{ value.lastMessage }}
+        </li>
+      </ul>
+    </div>
+    <script src="<%= static_path(@conn, "/js/vue.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/phoenix.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/server.js") %>"></script>
+  </body>
+</html>
